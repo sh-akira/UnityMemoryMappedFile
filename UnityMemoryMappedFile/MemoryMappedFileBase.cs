@@ -111,15 +111,15 @@ namespace UnityMemoryMappedFile
 
         private AsyncLock SendLock = new AsyncLock();
 
-        public async Task<string> SendCommandAsync(object command, string requestId = null)
+        public async Task<string> SendCommandAsync(object command, string requestId = null, bool needWait = false)
         {
             using (await SendLock.LockAsync())
             {
-                return await Task.Run(() => SendCommand(command, requestId));
+                return await Task.Run(() => SendCommand(command, requestId, needWait));
             }
         }
 
-        public string SendCommand(object command, string requestId = null)
+        public string SendCommand(object command, string requestId = null, bool needWait = false)
         {
             if (IsConnected == false) return null;
             if (string.IsNullOrEmpty(requestId)) requestId = Guid.NewGuid().ToString();
@@ -130,6 +130,8 @@ namespace UnityMemoryMappedFile
             {
                 if (readCts.Token.IsCancellationRequested) return null;
             }
+            //Need to wait requestID before send (because sometime return data very fast)
+            if (needWait) WaitReceivedDictionary.TryAdd(requestId, null);
             long position = 1;
             //CommandType
             senderAccessor.Write(position, typeNameArray.Length);
@@ -153,9 +155,8 @@ namespace UnityMemoryMappedFile
 
         public async Task SendCommandWaitAsync(object command, Action<object> returnAction)
         {
-            var requestId = await SendCommandAsync(command);
+            var requestId = await SendCommandAsync(command, null, true);
             if (requestId == null) return;
-            WaitReceivedDictionary.TryAdd(requestId, null);
             while (WaitReceivedDictionary[requestId] == null)
             {
                 await Task.Delay(10);
