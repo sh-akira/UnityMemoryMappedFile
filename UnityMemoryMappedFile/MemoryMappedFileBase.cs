@@ -114,9 +114,14 @@ namespace UnityMemoryMappedFile
         public async Task<string> SendCommandAsync(object command, string requestId = null, bool needWait = false)
         {
             using (await SendLock.LockAsync())
+            return await Task.Run(async () =>
             {
-                return await Task.Run(() => SendCommand(command, requestId, needWait));
-            }
+                using (await SendLock.LockAsync())
+                {
+                    System.Diagnostics.Debug.WriteLine($"MemoryMappedFileBase SendCommandAsync EnterLock [{command.GetType().Name}]");
+                    return SendCommand(command, requestId, needWait);
+                }
+            });
         }
 
         public string SendCommand(object command, string requestId = null, bool needWait = false)
