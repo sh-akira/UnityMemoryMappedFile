@@ -11,7 +11,7 @@ namespace UnityMemoryMappedFile
 {
     public class MemoryMappedFileBase : IDisposable
     {
-        private const long capacity = 8192;
+        private const long capacity = 104857600L;
 
         private MemoryMappedFile receiver;
         private MemoryMappedViewAccessor receiverAccessor;
