@@ -129,6 +129,7 @@ namespace UnityMemoryMappedFile
             while (senderAccessor.ReadByte(0) == 1) // Wait finish flag
             {
                 if (readCts.Token.IsCancellationRequested) return null;
+                Thread.Sleep(1);// await Task.Delay(1);
             }
             //Need to wait requestID before send (because sometime return data very fast)
             if (needWait) WaitReceivedDictionary.TryAdd(requestId, null);
